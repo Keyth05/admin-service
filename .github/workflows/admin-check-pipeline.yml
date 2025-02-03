@@ -1,0 +1,56 @@
+name: Pipeline for Admin Check Microservice
+
+on:
+  push:
+    branches:
+      - test
+    paths:
+      - 'admin-check-service/**'
+      - '.github/workflows/admin-check-pipeline.yml'
+  pull_request:
+    branches: 
+      - test
+    paths:
+      - 'admin-check-service/**'
+      - '.github/workflows/admin-check-pipeline.yml'
+jobs:
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker image
+        run: docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_CHECK}}:latest ./admin-check-service
+
+      - name: Push Docker image to Dockerhub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_CHECK}}:latest
+
+  deploy-to-ec2-instance:
+    needs: build-and-push-docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST_CHECK }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            echo "Pull, stop, and redeploy the Docker container"
+            docker pull ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_CHECK}}:latest
+            docker stop ${{secrets.DOCKER_IMAGE_CHECK}}|| true
+            docker rm ${{secrets.DOCKER_IMAGE_CHECK}} || true
+            docker run -e DATASOURCE_USERNAME=${{secrets.DATASOURCE_USERNAME}} \
+                       -e DATASOURCE_PASSWORD=${{secrets.DATASOURCE_PASSWORD}} \
+                       -e DATASOURCE_URL=${{secrets.DATASOURCE_URL}} \
+                       -e DATASOURCE_PORT=${{secrets.DATASOURCE_PORT}} \
+                       -e DATABASE=${{secrets.DATABASE}} \
+                       -e WEBSOCKET_URL=${{secrets.WEBSOCKET_URL}} \
+                       -d --name ${{secrets.DOCKER_IMAGE_CHECK}} \
+                       -p 4000:4000 ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_CHECK}}:latest
