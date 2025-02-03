@@ -53,4 +53,4 @@ jobs:
                        -e DATABASE=${{secrets.DATABASE}} \
                        -e WEBSOCKET_URL=${{secrets.WEBSOCKET_URL}} \
                        -d --name ${{secrets.DOCKER_IMAGE_CHECK}} \
-                       -p 4000:4000 ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_CHECK}}:latest
+                       -p 3000:3000 ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_CHECK}}:latest
