@@ -1,18 +1,18 @@
-name: Pipeline for Product List Microservice
+name: Pipeline for Admin List Microservice
 
 on:
   push:
     branches:
       - test
     paths:
-      - 'product-list-service/**'
-      - '.github/workflows/product-list-pipeline.yml'
+      - 'admin-list-service/**'
+      - '.github/workflows/admin-list-pipeline.yml'
   pull_request:
     branches: 
       - test
     paths:
-      - 'product-list-service/**'
-      - '.github/workflows/product-list-pipeline.yml'
+      - 'admin-list-service/**'
+      - '.github/workflows/admin-list-pipeline.yml'
 jobs:
   build-and-push-docker:
     runs-on: ubuntu-latest
@@ -26,7 +26,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Docker image
-        run: docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_LIST}}:latest ./product-list-service
+        run: docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_LIST}}:latest ./admin-list-service
 
       - name: Push Docker image to Dockerhub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_LIST}}:latest
@@ -46,8 +46,10 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_IMAGE_LIST}}:latest
             docker stop ${{secrets.DOCKER_IMAGE_LIST}}|| true
             docker rm ${{secrets.DOCKER_IMAGE_LIST}} || true
-            docker run -e MONGODB_URL=${{secrets.MONGODB_URL}} \
-                       -e MONGODB_DB_NAME=${{secrets.MONGODB_DB_NAME}} \
-                       -e MONGODB_COLLECTION=${{secrets.MONGODB_COLLECTION}} \
+            docker run -e DATASOURCE_USERNAME=${{secrets.DATASOURCE_USERNAME}} \
+                       -e DATASOURCE_PASSWORD=${{secrets.DATASOURCE_PASSWORD}} \
+                       -e DATASOURCE_URL=${{secrets.DATASOURCE_URL}} \
+                       -e DATASOURCE_PORT=${{secrets.DATASOURCE_PORT}} \
+                       -e DATABASE=${{secrets.DATABASE}} \
                        -d --name ${{secrets.DOCKER_IMAGE_LIST}} \
                        -p 4000:4000 ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_LIST}}:latest
