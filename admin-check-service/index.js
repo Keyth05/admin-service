@@ -1,50 +1,61 @@
-const WebSocket = require('ws');
+const express = require('express');
+const sequelize = require('./sequelize');
 const Admin = require('./model/admin');
 require('dotenv').config();
 
-let ws;
+const app = express();
+const port = process.env.PORT || 3000;
 
-function connectWebSocket() {
-    ws = new WebSocket(process.env.WEBSOCKET_URL);
+app.use(express.json());
 
-    ws.on('open', () => {
-        console.log('Connected to WebSocket server');
-        ws.send(JSON.stringify({ event: 'subscribe', topic: 'check_admin' }));
-    });
-
-    ws.on('message', async (message) => {
-        console.log('Message received:', message);
-
-        try {
-            const parsedMessage = JSON.parse(message);
-            if (parsedMessage.topic === 'check_admin') {
-                const email = parsedMessage.email;
-
-                const admins = await Admin.findAll({ where: { email } });
-                const isAdmin = admins.length > 0;
-
-                ws.send(JSON.stringify({
-                    topic: 'verificated_admin',
-                    event: 'check',
-                    email,
-                    isAdmin
-                }));
-            }
-        } catch (error) {
-            console.error('Error processing message:', error);
-        }
-    });
-
-    ws.on('close', () => {
-        console.log('Disconnected from WebSocket server. Reconnecting in 1 minute...');
-        setTimeout(connectWebSocket, 6000); 
-    });
-
-    ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
-        console.log('Reconnecting in 1 minute...');
-        setTimeout(connectWebSocket, 60000); 
-    });
+async function initializeDatabase() {
+    try {
+        await sequelize.authenticate();
+        console.log('Database connection established.');
+        await sequelize.sync();
+        console.log('Database synchronized.');
+    } catch (error) {
+        console.error('Unable to connect to the database:', error.message);
+        console.log('The server will continue running without a database connection.');
+    }
 }
 
-connectWebSocket();
+async function checkDatabaseConnection() {
+    try {
+        await sequelize.authenticate();
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+app.get('/client/checkAdmin/:email', async (req, res) => {
+    const { email } = req.params;
+
+    if (!email) {
+        return res.status(400).json({ status: 'Failed', message: 'Email is required' });
+    }
+
+    const isDatabaseConnected = await checkDatabaseConnection();
+
+    if (!isDatabaseConnected) {
+        return res.status(503).json({ status: 'Failed', message: 'Database is unavailable' });
+    }
+
+    try {
+        const admins = await Admin.findAll({ where: { email } });
+        const isAdmin = admins.length > 0;
+        return res.status(isAdmin ? 200 : 404).json({
+            status: isAdmin ? 'OK' : 'Failed',
+            message: isAdmin ? 'Admin exists' : 'Admin does not exist',
+        });
+    } catch (error) {
+        console.error('Error checking admin:', error);
+        return res.status(500).json({ status: 'Failed', message: 'Internal server error' });
+    }
+});
+
+app.listen(port, async () => {
+    console.log(`Server is running on port ${port}`);
+    await initializeDatabase();
+});
