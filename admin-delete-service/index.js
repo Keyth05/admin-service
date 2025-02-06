@@ -5,12 +5,15 @@ const sequelize = require('./sequelize');
 const { Sequelize } = require('sequelize');
 
 const app = express();
-const port = 3000;
+const port = 1030;
 
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+    res.status(200).send('Delete Admin Service is running ...');
+});
 
-app.delete('/admins/:id', async (req, res) => {
+app.delete('/admin/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const admin = await Admin.findByPk(id);

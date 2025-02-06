@@ -1,7 +1,6 @@
 require('dotenv').config();
-const mysql = require('mysql2/promise');
 
-async function connectToMySQL() {
+async function connectToMariaDB() {
     try {
         const connection = await mysql.createConnection({
             host: process.env.DATASOURCE_URL,
@@ -11,7 +10,7 @@ async function connectToMySQL() {
             database: process.env.DATABASE
         });
 
-        console.log('Successfully connected to MySQL');
+        console.log('Successfully connected to MariaDB');
         return connection;
     } catch (error) {
         console.error('Connection error:', error);
@@ -19,4 +18,4 @@ async function connectToMySQL() {
     }
 }
 
-module.exports = { connectToMySQL };
+module.exports = { connectToMariaDB };

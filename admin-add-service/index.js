@@ -5,11 +5,15 @@ const sequelize = require('./sequelize');
 const { Sequelize } = require('sequelize');
 
 const app = express();
-const port = 3000;
+const port = 1028;
 
 app.use(bodyParser.json());
 
-app.post('/admins', async (req, res) => {
+app.get('/', (req, res) => {
+    res.status(200).send('Add Admin Service is running ...');
+});
+
+app.post('/admin', async (req, res) => {
     try {
         const { email } = req.body;
 
