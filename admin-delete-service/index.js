@@ -14,6 +14,12 @@ app.get('/', (req, res) => {
 
 app.delete('/admin/:id', async (req, res) => {
     const { id } = req.params;
+
+    // Validate ID format (assuming it's a number)
+    if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid admin ID format' });
+    }
+
     console.log(`Deleting admin with ID: ${id}`);
     try {
         const admin = await Admin.findByPk(id);
