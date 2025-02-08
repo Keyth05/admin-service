@@ -1,45 +1,34 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const Admin = require('./model/admin');
-const sequelize = require('./sequelize');
-
 const app = express();
-const port = 1030;
+const port = process.env.PORT || 3000;
 
-app.use(bodyParser.json());
+app.use(express.json()); /
 
 app.get('/', (req, res) => {
     res.status(200).send('Delete Admin Service is running ...');
 });
 
-app.delete('/admin/:id', async (req, res) => {
-    const { id } = req.params;
+app.delete('/admin/:adminId', async (req, res) => {
+    const { adminId } = req.params;
 
-    // Validate ID format (assuming it's a number)
-    if (isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid admin ID format' });
-    }
-
-    console.log(`Deleting admin with ID: ${id}`);
     try {
-        const admin = await Admin.findByPk(id);
-        if (!admin) {
-            return res.status(404).json({ error: 'Admin not found' });
+        const admin = await Admin.destroy({
+            where: {
+                adminId: adminId
+            }
+        });
+
+        if (admin) {
+            res.status(200).send({ message: `Admin with adminId ${adminId} deleted successfully.` });
+        } else {
+            res.status(404).send({ message: `Admin with adminId ${adminId} not found.` });
         }
-        await admin.destroy();
-        res.status(200).json({ message: 'Admin deleted successfully' });
     } catch (error) {
-        console.error('Error deleting admin:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).send({ message: 'Error deleting the admin', error: error.message });
     }
 });
 
-app.listen(port, async () => {
-    try {
-        await sequelize.sync({ force: false });
-        console.log('Database synchronized');
-        console.log(`Server running on http://localhost:${port}`);
-    } catch (error) {
-        console.error('Error synchronizing database:', error);
-    }
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });
