@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const Admin = require('./model/admin');
 const sequelize = require('./sequelize');
-const { Sequelize } = require('sequelize');
 
 const app = express();
 const port = 1030;
@@ -15,6 +14,7 @@ app.get('/', (req, res) => {
 
 app.delete('/admin/:id', async (req, res) => {
     const { id } = req.params;
+    console.log(`Deleting admin with ID: ${id}`);
     try {
         const admin = await Admin.findByPk(id);
         if (!admin) {
