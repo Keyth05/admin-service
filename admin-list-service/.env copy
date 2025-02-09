@@ -1,0 +1,5 @@
+DATABASE=your_database_name
+DATASOURCE_USERNAME=your_username
+DATASOURCE_PASSWORD=your_password
+DATASOURCE_URL=your_database_host
+DATASOURCE_PORT=your_database_port

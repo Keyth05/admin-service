@@ -1,0 +1,15 @@
+default: &default
+  adapter: mysql2
+  encoding: utf8
+  pool: 5
+  host: <%= ENV['DATASOURCE_URL'] %>
+  port: <%= ENV['DATASOURCE_PORT'] %>
+  database: <%= ENV['DATABASE'] %>
+  username: <%= ENV['DATASOURCE_USERNAME'] %>
+  password: <%= ENV['DATASOURCE_PASSWORD'] %>
+
+development:
+  <<: *default
+
+production:
+  <<: *default

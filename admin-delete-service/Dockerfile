@@ -1,13 +1,13 @@
-FROM node:18
+FROM ruby:3.2
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-
-RUN npm install
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
 
 COPY . .
 
 EXPOSE 4000
 
-CMD ["npm", "start"]
+CMD ["ruby", "app.rb"]
+
